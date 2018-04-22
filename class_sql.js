@@ -64,7 +64,7 @@ methods.classStarted = function (request, connection, profID, classID, callback)
 			diffInDays = (currentDate.getTime() - prevLecDate.getTime())/(1000*60*60*24);
 			if(diffInDays >= 1) {
 				var date = new Date();
-				var sqlDate = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "T01:32:21.196Z";
+				var sqlDate = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
 				var sql = "update classes set total_lec = " + lectureCount + " , prev_lec_date = '" + sqlDate + "' where class_id = '" + classID + "' ;";
 				connection.query(sql, function (err, result, fields) {
 					if (err) throw err;
@@ -96,7 +96,7 @@ methods.markStudentAttendance = function (request, connection, studentID, classI
 			console.log("currentDate "+currentDate + "prevLecDate "+prevLecDate+" diffInDays "+diffInDays);
 			if(diffInDays >= 1) {
 				var date = new Date();
-				var sqlDate = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "T01:32:21.196Z";
+				var sqlDate = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
 				var sql = "update " + classIDStudent + " set attendance = " + lectureCount + " , prev_lec_date = '" + sqlDate + "' where student_id = " + studentID + " ;";
 				console.log(sql);
 				connection.query(sql, function (err, result, fields) {

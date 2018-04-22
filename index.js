@@ -5,7 +5,7 @@ var mysql = require('mysql'); // MS Sql Server client
 var databaseConnectionNameFile = require("./database_connection.js");
 var classNameFile = require("./class_sql.js");
 var roleByIdFile = require("./role_by_id.js");
-var connection;
+var connection, profId, studId;
 var classDetails = new Map();
 
 app.set('port', (process.env.PORT || 5000));
@@ -32,7 +32,7 @@ function databaseConnectionResult(err, getConnection){
 }
 databaseConnectionNameFile.data.databaseConnection(databaseConnectionResult);
 
-app.get('/class_name', function(request, response) {
+app.get('/className', function(request, response) {
 	function classNameResult(err, getClassDetails){
 		classDetails = getClassDetails;
 		console.log(classDetails.get(classNameFile.CLASS_ID) + " class_name");
@@ -45,7 +45,7 @@ app.get('/class_name', function(request, response) {
 	classNameFile.data.className(request, connection, classNameResult);
 });
 
-app.get('/is_prof', function(request, response) {
+app.get('/isProf', function(request, response) {
 	function isProfResult(err, isProf){
 		console.log(isProf + " is Prof");
 		response.send(isProf);
@@ -53,7 +53,7 @@ app.get('/is_prof', function(request, response) {
 	roleByIdFile.data.isProf(request, connection, classDetails.get(classNameFile.CLASS_ID), isProfResult);
 });
 
-app.get('/is_stud', function(request, response) {
+app.get('/isStud', function(request, response) {
 	function isStudResult(err, isStud){
 		console.log(isStud + " is Stud");
 		response.send(isStud);
@@ -61,18 +61,51 @@ app.get('/is_stud', function(request, response) {
 	roleByIdFile.data.isStud(request, connection, classDetails.get(classNameFile.CLASS_ID_STUDENT), isStudResult);
 });
 
-app.get('/class_started', function(request, response) {
-	function classAttendanceResult(err, markAttendance){
-		console.log(markAttendance + " class_started");
-		response.send(markAttendance);
+app.get('/classStarted', function(request, response) {
+	var isProfQueryResult = function isProfQueryResult(err, result){
+		if(result != 0) {
+			function classAttendanceResult(err, markAttendance){
+				console.log(markAttendance + " class_started");
+				response.send(markAttendance);
+			}
+			classNameFile.data.classStarted(request, connection, result, classDetails.get(classNameFile.CLASS_ID), classAttendanceResult);
+		}
+		else{
+			response.send(false);
+		}
 	}
-	classNameFile.data.classStarted(request, connection, 1, classDetails.get(classNameFile.CLASS_ID), classAttendanceResult);
+	roleByIdFile.data.getProfId(request, connection, isProfQueryResult);
+	
 });
 
 app.get('/markAttendance', function(request, response) {
-	function markAttendanceResult(err, markAttendance){
-		console.log(markAttendance + " markAttendance");
-		response.send(markAttendance);
+	var markStudentAttendanceQuery = function markStudentAttendanceQuery(err, result){
+		if(result != 0) {
+			function markAttendanceResult(err, markAttendance){
+				console.log(markAttendance + " markAttendance");
+				response.send(markAttendance);
+			}
+			classNameFile.data.markStudentAttendance(request, connection, result, classDetails.get(classNameFile.CLASS_ID_STUDENT), markAttendanceResult);
+		}
+		else{
+			response.send(false);
+		}
 	}
-	classNameFile.data.markStudentAttendance(request, connection, 1, classDetails.get(classNameFile.CLASS_ID_STUDENT), markAttendanceResult);
+	roleByIdFile.data.getStudId(request, connection, markStudentAttendanceQuery);
+});
+
+app.get('/getStudents', function(request, response) {
+	function getAllStudents(err, studentDetails){
+		console.log(studentDetails + " markAttendance");
+		response.send(studentDetails);
+	}
+	roleByIdFile.data.allStudents(request, connection, getAllStudents);
+});
+
+app.get('/getProf', function(request, response) {
+	function getAllProf(err, profDetails){
+		console.log(profDetails + " markAttendance");
+		response.send(profDetails);
+	}
+	roleByIdFile.data.allProfs(request, connection, getAllProf);
 });

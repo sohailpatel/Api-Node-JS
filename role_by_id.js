@@ -40,6 +40,31 @@ methods.isStud = function (request, connection, classID, callback){
 	getStudId(request, connection, isStudQueryResult);
 }
 
+methods.allProfs = function (request, connection, callback){
+	sql = "select * from professors;";
+	connection.query(sql, function (err, result, fields) {
+		if (err) throw err;
+		if(result.length > 0){
+			callback(null, result);
+		}
+		else{
+			callback(null, 0);
+		}
+	});
+}
+
+methods.allStudents = function (request, connection, callback){
+	sql = "select * from students;";
+	connection.query(sql, function (err, result, fields) {
+		if (err) throw err;
+		if(result.length > 0){
+			callback(null, result);
+		}
+		else{
+			callback(null, 0);
+		}
+	});
+}
 
 var getProfId = function(request, connection, callback){
 	sql = "select * from professors where email_id = '" + request.headers.email_id +"';";
@@ -67,4 +92,4 @@ var getStudId = function(request, connection, callback){
 	});
 }
 
-exports.data = methods;
+exports.data = { methods, getProfId, getStudId };
