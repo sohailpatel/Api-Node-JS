@@ -4,7 +4,7 @@ var mysql = require('mysql'); // MS Sql Server client
 
 const CLASS_ID = "class_id",CLASS_ID_STUDENT = "class_id_stud", DEPARTMENT_ID = "department_id", CLASS_ID_DETAILS = "class_id_det", LECTURE_COUNT="lecture_count", PREV_DATE="prev_date";
 
-methods.className = function (request, connection, callback){
+function className(request, connection, callback){
 	var startIndex, endIndex, dayOfWeek, totalLectureTime, startLectureTime, endLectureTime, currentTime, timeDecimalPart;
 	var classDetails = new Map();
 	var currentDate = new Date().getDate;
@@ -53,7 +53,7 @@ methods.className = function (request, connection, callback){
   	getClassQuery(request, connection, classQueryResult);
 }
 
-methods.classStarted = function (request, connection, profID, classID, callback){
+function classStarted(request, connection, profID, classID, callback){
 	var timeDiff, diffInDays, currentDate, diffInDays, lectureCount = 0;
 	var classQueryResult = function classQueryResult(err, lectureCountDetails){
 		if(lectureCountDetails){
@@ -83,7 +83,81 @@ methods.classStarted = function (request, connection, profID, classID, callback)
 	getTotalLectures(request, connection, classID, profID, classQueryResult);
 }
 
-methods.markStudentAttendance = function (request, connection, studentID, classIDStudent, callback){
+function classTimings(request, connection, classID, callback){
+	var classTimingResult = function classTimingResult(err, result){
+		if(result){
+			var startIndex = 0, endIndex = 5, totalLectureTime, startLectureTime, endLectureTime, timeDecimalPart, dayString, endLecString;
+			var classDetails = new Map();
+			var iterator = 0, dayiterator = 0;
+			while( iterator < result.length){
+				var lectureDays = result[iterator].days;
+				while( dayiterator < lectureDays.length){
+					if(lectureDays.charAt(dayiterator) == '1') {
+						switch(dayiterator){
+							case 0:
+								dayString = "Monday";
+								break;
+							case 1:
+								dayString = "Tuesday";
+								break;
+							case 2:
+								dayString = "Wednesday";
+								break;
+							case 3:
+								dayString = "Thursday";
+								break;
+							case 4:
+								dayString = "Friday";
+								break;
+						}
+						var lectureTime = result[iterator].timings.substring(startIndex, endIndex);
+						totalLectureTime = result[iterator].lec_len;
+						startLectureTime = parseFloat(lectureTime.replace(":","."));
+						endLectureTime = startLectureTime + (totalLectureTime / 60);
+						var splitEndLectureTime = endLectureTime.toString().split(".");
+						timeDecimalPart = splitEndLectureTime[1];
+						if(splitEndLectureTime[1].length == 1){
+							timeDecimalPart *= 10;
+						}
+						if(timeDecimalPart >= 60){
+							endLectureTime += 1;
+							endLectureTime -= timeDecimalPart / 100;
+						}
+						endLecString = endLectureTime.toString();
+						if(endLecString.split(".")[1].length == 1){
+							endLecString = endLectureTime.toString() + "0";
+						}
+						classDetails.set(dayString, lectureTime + " - " + endLecString.replace(".",":"));
+					}
+					startIndex += 6;
+					endIndex = startIndex + 5;
+					dayiterator++;
+				}
+				iterator++;
+			}
+			callback (null, classDetails);
+		}
+		else{
+			callback (null, false);
+		}
+	}
+	getClassTimingResult(request, connection, classID, classTimingResult);
+}
+
+function getClassTimingResult(request, connection, classID, callback){
+	sql = "select days,timings,lec_len from classes where class_id = '" + classID + "';" ;
+	connection.query(sql, function (err, result, fields) {
+		if (err) throw err;
+		if(result.length == 0){
+			callback(null, false);
+		}
+		else{
+			callback(null, result);
+		}
+	});
+}
+
+function markStudentAttendance(request, connection, studentID, classIDStudent, callback){
 	var timeDiff, diffInDays, currentDate, diffInDays, lectureCount = 0;
 	var markStudentAttendanceQuery = function classQueryResult(err, studentLecDetails){
 		if(studentLecDetails){
@@ -116,7 +190,7 @@ methods.markStudentAttendance = function (request, connection, studentID, classI
 	getStudentLecDetails(request, connection, classIDStudent, studentID, markStudentAttendanceQuery);
 }
 
-var getClassQuery = function(request, connection, callback){
+function getClassQuery(request, connection, callback){
 	sql = "select * from classes where class_room = '" + request.headers.beacon_name + "';" ;
 	connection.query(sql, function (err, result, fields) {
 		if (err) throw err;
@@ -129,7 +203,7 @@ var getClassQuery = function(request, connection, callback){
 	});
 }
 
-var getTotalLectures = function(request, connection, classID, profID, callback){
+function getTotalLectures(request, connection, classID, profID, callback){
 	var lectureCount = 0;
 	var lectureCountDetails = new Map();
 	sql = "select total_lec, prev_lec_date from classes where class_id = '" + classID + "' and prof_id = "+ profID +";";
@@ -146,7 +220,7 @@ var getTotalLectures = function(request, connection, classID, profID, callback){
 	});
 }
 
-var getStudentLecDetails = function(request, connection, classIDStudent, studentID, callback){
+function getStudentLecDetails(request, connection, classIDStudent, studentID, callback){
 	var lectureCount = 0;
 	var studentLecDetails = new Map();
 	sql = "select attendance, prev_lec_date  from "+ classIDStudent +" where student_id = "+ studentID +";";
@@ -163,7 +237,14 @@ var getStudentLecDetails = function(request, connection, classIDStudent, student
 	});
 }
 
-module.exports.CLASS_ID = CLASS_ID;
-module.exports.CLASS_ID_STUDENT = CLASS_ID_STUDENT;
-module.exports.DEPARTMENT_ID = DEPARTMENT_ID;
-exports.data = methods;
+module.exports = {
+	className: className,
+	markStudentAttendance: markStudentAttendance,
+	classStarted: classStarted,
+	classTimings: classTimings,
+	CLASS_ID: CLASS_ID,
+	CLASS_ID_STUDENT: CLASS_ID_STUDENT,
+	CLASS_ID_DETAILS: CLASS_ID_DETAILS,
+	DEPARTMENT_ID: DEPARTMENT_ID
+  };
+

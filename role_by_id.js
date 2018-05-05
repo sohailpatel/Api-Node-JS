@@ -2,7 +2,7 @@
 var methods = {};
 var mysql = require('mysql'); // MS Sql Server client
 
-methods.isProf = function (request, connection, classID, callback){
+function isProf(request, connection, classID, callback){
 	var isProfQueryResult = function isProfQueryResult(err, result){
 		if(result != 0) {
 			sql = "select * from classes where class_id = '" + classID +"' and prof_id = " + result + ";";
@@ -21,7 +21,7 @@ methods.isProf = function (request, connection, classID, callback){
 	getProfId(request, connection, isProfQueryResult);
 }
 
-methods.isStud = function (request, connection, classID, callback){
+function isStud(request, connection, classID, callback){
 	var isStudQueryResult = function isStudQueryResult(err, result){
 		if(result != 0) {
 			sql = "select * from " + classID +" where student_id = " + result + ";";
@@ -40,7 +40,7 @@ methods.isStud = function (request, connection, classID, callback){
 	getStudId(request, connection, isStudQueryResult);
 }
 
-methods.allProfs = function (request, connection, callback){
+function allProfs(request, connection, callback){
 	sql = "select * from professors;";
 	connection.query(sql, function (err, result, fields) {
 		if (err) throw err;
@@ -53,7 +53,7 @@ methods.allProfs = function (request, connection, callback){
 	});
 }
 
-methods.allStudents = function (request, connection, callback){
+function allStudents(request, connection, callback){
 	sql = "select * from students;";
 	connection.query(sql, function (err, result, fields) {
 		if (err) throw err;
@@ -66,7 +66,7 @@ methods.allStudents = function (request, connection, callback){
 	});
 }
 
-var getProfId = function(request, connection, callback){
+function getProfId(request, connection, callback){
 	sql = "select * from professors where email_id = '" + request.headers.email_id +"';";
 	connection.query(sql, function (err, result, fields) {
 		if (err) throw err;
@@ -79,7 +79,7 @@ var getProfId = function(request, connection, callback){
 	});
 }
 
-var getStudId = function(request, connection, callback){
+function getStudId(request, connection, callback){
 	sql = "select * from students where email_id = '" + request.headers.email_id +"';";
 	connection.query(sql, function (err, result, fields) {
 		if (err) throw err;
@@ -93,3 +93,12 @@ var getStudId = function(request, connection, callback){
 }
 
 exports.data = { methods, getProfId, getStudId };
+
+module.exports = {
+	isProf: isProf,
+	isStud: isStud,
+	allProfs: allProfs,
+	allStudents: allStudents,
+	getProfId: getProfId,
+	getStudId: getStudId
+  };
