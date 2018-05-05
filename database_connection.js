@@ -9,9 +9,14 @@ methods.databaseConnection = function (callback){
 		password: 'root',
 		database: 'university_beacon'
 	});
+	/*var connection = mysql.createConnection({
+		host: "localhost",
+		user: 'root',
+		password: 'root',
+		database: 'university_beacon'
+	});*/
 	connection.connect(function(err) {
 		if (err) throw err;
-		//console.log(opts);
 		callback (null, connection);
 	});
 }
